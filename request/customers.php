@@ -49,6 +49,10 @@ class CustomersRequest extends Customers {
     public function unauthorizedData() : string {
         return $this->unauthorized();
     }
+    
+    public function badCustomerRequest() : string {
+        return $this->badRequest();
+    }
 
 }
 
@@ -69,7 +73,13 @@ if(!$customers->verifyToken($token)) {
 }
 
 if($requestMethod == 'POST') {
-    echo $customers->getAll();
+    if($process && $process == 'get_all_customers') {
+        echo $customers->getAll();
+    }
+
+    if(!$process) {
+        $customers->badCustomerRequest();
+    }
 }
 
 if($requestMethod == 'GET') {
