@@ -42,6 +42,14 @@ class CustomersRequest extends Customers {
         return $this->getAllCustomers();
     }
 
+    public function addCustomer(?string $name = null, ?string $email = null) : string {
+        return $this->addCustomerQuery($name, $email);
+    }
+
+    public function deleteCustomer(?string $id = null) : string {
+        return $this->deleteCustomerQuery($id);
+    }
+
     public function verifyToken(?string $token = null) : bool {
         return $this->checkToken($token);
     }
@@ -62,7 +70,7 @@ $customers = new CustomersRequest();
 if($requestMethod == 'OPTIONS') {
     http_response_code(200);
     header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+    header("Access-Control-Allow-Methods: POST, GET, DELETE, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-Requested-With");
     exit();
 }
@@ -77,6 +85,10 @@ if($requestMethod == 'POST') {
         echo $customers->getAll();
     }
 
+    if($process && $process == 'add_customer') {
+        echo $customers->addCustomer($_POST['name'] ?? null, $_POST['email'] ?? null);
+    }
+
     if(!$process) {
         $customers->badCustomerRequest();
     }
@@ -84,6 +96,11 @@ if($requestMethod == 'POST') {
 
 if($requestMethod == 'GET') {
     echo $customers->getAll();
+}
+
+if($requestMethod == 'DELETE') {
+    $id = $_GET['id'] ?? null;
+    echo $customers->deleteCustomer($id);
 }
 
 ?>

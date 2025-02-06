@@ -8,7 +8,7 @@ class API extends Database {
         $this->conn = $this->connect();
     }
 
-    protected function success(string $type, string $token = null) : string {
+    protected function success(string $type = null, string $token = null) : string {
         if($type == 'login') {
             $response = array (
                 'status' => 200,
