@@ -27,8 +27,17 @@ class API extends Database {
         return json_encode($response);
     }
 
-    protected function fetched($result) : string {
-        $result = $result->fetch_all(MYSQLI_ASSOC);
+    protected function edited() : string {
+        $response = array (
+            'status' => 200,
+            'message' => 'edited'
+        );
+        header("HTTP/1.1 200 Edited");
+        return json_encode($response);
+    }
+
+    protected function fetched($result, ?string $type = null) : string {
+        !$type ? $result = $result->fetch_all(MYSQLI_ASSOC) : $result = $result->fetch_assoc();
         
         $response = array (
             'status' => 200,

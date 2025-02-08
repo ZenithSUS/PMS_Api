@@ -42,8 +42,16 @@ class CustomersRequest extends Customers {
         return $this->getAllCustomers();
     }
 
+    public function get(?string $id = null) {
+        return $this->getCustomer($id);
+    }
+
     public function addCustomer(?string $name = null, ?string $email = null) : string {
         return $this->addCustomerQuery($name, $email);
+    }
+
+    public function editCustomer(?string $id = null, ?string $name = null, ?string $email = null) {
+        return $this->editCustomerQuery($id, $name, $email);
     }
 
     public function deleteCustomer(?string $id = null) : string {
@@ -81,12 +89,20 @@ if(!$customers->verifyToken($token)) {
 }
 
 if($requestMethod == 'POST') {
+    $id = $_GET['id'] ?? null;
+    $name = $_POST['name'] ?? null;
+    $email = $_POST['email'] ?? null;
+
     if($process && $process == 'get_all_customers') {
         echo $customers->getAll();
     }
 
     if($process && $process == 'add_customer') {
-        echo $customers->addCustomer($_POST['name'] ?? null, $_POST['email'] ?? null);
+        echo $customers->addCustomer($name, $email);
+    }
+
+    if($process && $process == 'edit_customer') {
+        echo $customers->editCustomer($id, $name, $email);   
     }
 
     if(!$process) {
@@ -95,7 +111,15 @@ if($requestMethod == 'POST') {
 }
 
 if($requestMethod == 'GET') {
-    echo $customers->getAll();
+    $id = $_GET['id'] ?? null;
+
+    if(isset($id)) {
+        echo $customers->get($id);
+    }
+
+    if(!$id) {
+        $customers->badCustomerRequest();
+    }
 }
 
 if($requestMethod == 'DELETE') {
