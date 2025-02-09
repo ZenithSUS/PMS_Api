@@ -7,7 +7,7 @@ class Customers extends Token {
     }
 
     protected function getAllCustomers() : string {
-        $sql = "SELECT * FROM customers ORDER BY id DESC";
+        $sql = "SELECT id, name, email FROM customers ORDER BY id DESC";
         $stmt = $this->conn->prepare($sql);
 
         if(!$stmt->execute()) {

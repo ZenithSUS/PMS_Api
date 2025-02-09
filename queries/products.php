@@ -7,7 +7,7 @@ class Products extends Token {
     }
 
     protected function getAllProducts() : string {
-        $sql = "SELECT * FROM products ORDER BY id DESC";
+        $sql = "SELECT id, name, price, quantity FROM products ORDER BY id DESC";
         $stmt = $this->conn->prepare($sql);
 
         if(!$stmt->execute()) {
