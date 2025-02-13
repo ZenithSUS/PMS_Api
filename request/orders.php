@@ -34,7 +34,7 @@ if(isset($token) && strpos($token, 'Bearer ') !== false) {
 if($requestMethod == 'OPTIONS') {
     http_response_code(200);
     header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+    header("Access-Control-Allow-Methods: POST, GET, DELETE, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-Requested-With");
     exit();
 }   
@@ -51,6 +51,14 @@ class OrdersRequest extends Orders {
 
     public function addOrder(?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : string {
         return $this->addOrderQuery($customerId, $productId, $quantity);
+    }
+
+    public function editOrder(?string $id = null, ?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : string {
+        return $this->editOrderQuery($id, $customerId, $productId, $quantity);
+    }
+
+    public function deleteOrder(?string $id = null) : string {
+        return $this->deleteOrderQuery($id);
     }
 
     public function badOrderRequest() : string {
@@ -80,6 +88,16 @@ if($requestMethod == 'POST') {
 
 if($requestMethod == 'GET') {
     echo $orders->getAll();
+}
+
+if($requestMethod == 'DELETE') {
+    $id = $_GET['id'] ?? null;
+
+    if(!$id) {
+        $orders->badOrderRequest();
+    }
+    
+    echo $orders->deleteOrder($id);
 }
 
 ?>

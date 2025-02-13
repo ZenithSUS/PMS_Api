@@ -39,6 +39,36 @@ class Orders extends Token {
         return $stmt->execute() ? $this->success('order') : $this->queryFailed();
     }
 
+    protected function editOrderQuery(?string $id = null, ?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : string {
+        $this->checkFields($customerId, $productId, $quantity);
+
+        if(!empty($this->errors)) {
+            return $this->fieldError($this->errors);
+        }  
+
+        $sql = "UPDATE orders SET customer_id = ?, product_id = ?, quantity = ? WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+
+        if(!$stmt) {
+            return $this->queryFailed();
+        }
+
+        $stmt->bind_param('ssii', $customerId, $productId, $quantity, $id);
+        return $stmt->execute() ? $this->success('order') : $this->queryFailed();
+    }
+
+    protected function deleteOrderQuery(?string $id = null) : string {
+        $sql = "DELETE FROM orders WHERE id = ? LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+
+        if(!$stmt) {
+            return $this->queryFailed();
+        }
+
+        $stmt->bind_param('s', $id);
+        return $stmt->execute() ? $this->success('order') : $this->queryFailed();
+    }
+
     private function checkFields(?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : void {
         if(empty($customerId) || is_null($customerId) || $customerId === "") {
             $this->errors['customer'] = 'Please select a customer';
