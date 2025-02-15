@@ -115,10 +115,8 @@ if($requestMethod == 'GET') {
 
     if(isset($id)) {
         echo $customers->get($id);
-    }
-
-    if(!$id) {
-        $customers->badCustomerRequest();
+    } else {
+        echo $customers->getAll();
     }
 }
 

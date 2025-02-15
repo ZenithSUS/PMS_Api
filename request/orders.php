@@ -49,6 +49,10 @@ class OrdersRequest extends Orders {
         return $this->getAllOrders();
     }
 
+    public function get(?string $id = null) : string {
+        return $this->getOrder($id);
+    }
+
     public function addOrder(?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : string {
         return $this->addOrderQuery($customerId, $productId, $quantity);
     }
@@ -81,14 +85,26 @@ if($requestMethod == 'POST') {
         echo $orders->addOrder($customerId, $productId, $quantity);
     }
 
+    if($process && $process == 'edit_order') {
+        $id = $_GET['id'] ?? null;
+        echo $orders->editOrder($id, $customerId, $productId, $quantity);
+    }
+
     if(!$process) {
         $orders->badOrderRequest();
     }
 }
 
 if($requestMethod == 'GET') {
-    echo $orders->getAll();
+    $id = $_GET['id'] ?? null;
+
+    if(isset($id)) {
+        echo $orders->get($id);
+    } else {
+        echo $orders->getAll();
+    }
 }
+
 
 if($requestMethod == 'DELETE') {
     $id = $_GET['id'] ?? null;

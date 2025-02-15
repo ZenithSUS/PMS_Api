@@ -79,6 +79,7 @@ if($requestMethod == 'POST') {
 }
 
 if($requestMethod == 'GET') {
+    $id = $_GET['id'] ?? null;
     echo $productsRequest->getAll();
 }
 ?>
