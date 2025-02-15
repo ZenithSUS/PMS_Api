@@ -39,6 +39,22 @@ class ProductsRequest extends Products {
         return $this->getAllProducts();
     }
 
+    public function get(?string $id = null) : string {
+        return $this->getProduct($id);
+    }
+
+    public function addProduct(?string $productName = null, ?string $quantity = null, ?string $price = null) : ?string {
+        return $this->addProductQuery($productName, $quantity, $price);
+    }
+
+    public function editProduct(?string $id = null, ?string $productName = null, ?string $quantity = null, ?string $price = null) : ?string {
+        return $this->editProductQuery($id, $productName, $quantity, $price);
+    }
+
+    public function deleteProduct(?string $id = null) : string {
+        return $this->deleteProductQuery($id);
+    }
+    
     public function badProductRequest() : string {
         return $this->badRequest();
     }
@@ -57,7 +73,7 @@ $productsRequest = new ProductsRequest();
 if($requestMethod == 'OPTIONS') {
     http_response_code(200);
     header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+    header("Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE");
     header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Authorization, X-Requested-With");
     exit();
 }
@@ -73,6 +89,21 @@ if($requestMethod == 'POST') {
         echo $productsRequest->getAll();
     }
 
+    if($process && $process == 'add_product') {
+        $productName = $_POST['productName'] ?? null;
+        $quantity = $_POST['quantity'] ?? null;
+        $price = $_POST['price'] ?? null;
+        echo $productsRequest->addProduct($productName, $quantity, $price);
+    }
+
+    if($process && $process == 'edit_product') {
+        $id = $_GET['id'] ?? null;
+        $productName = $_POST['productName'] ?? null;
+        $quantity = $_POST['quantity'] ?? null;
+        $price = $_POST['price'] ?? null;
+        echo $productsRequest->editProduct($id, $productName, $quantity, $price);
+    }
+
     if(!$process) {
         $productsRequest->badProductRequest();
     }
@@ -80,6 +111,21 @@ if($requestMethod == 'POST') {
 
 if($requestMethod == 'GET') {
     $id = $_GET['id'] ?? null;
-    echo $productsRequest->getAll();
+    if(isset($id)) {
+        echo $productsRequest->get($id);
+    } else {
+        echo $productsRequest->getAll();
+    }
+}
+
+if($requestMethod == 'DELETE') {
+    $id = $_GET['id'] ?? null;
+
+    if(!isset($id)) {
+        echo $productsRequest->badProductRequest();
+        exit();
+    }
+
+    echo $productsRequest->deleteProduct($id);
 }
 ?>

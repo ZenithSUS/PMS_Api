@@ -12,10 +12,10 @@ class API extends Database {
         if($type == 'login') {
             $response = array (
                 'status' => 200,
-                'message' => 'success',
+                'message' => 'login success',
                 'token' => $token
             );
-            header("HTTP/1.1 200 OK");
+            header("HTTP/1.1 200 Login Success");
             return json_encode($response);
         }
 

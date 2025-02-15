@@ -138,7 +138,7 @@ class Orders extends Token {
             $this->errors['quantity'] = 'Please add a value';
         } else if ($quantity < 0) {
             $this->errors['quantity'] = 'Please enter a valid value';
-        } else if ($productId !== "" && !$this->checkAvailableProduct($quantity, $productId)) {
+        } else if ($productId !== "" && !$this->checkAvailableProduct($quantity, $productId, $customerId)) {
             $this->errors['quantity'] = 'Product is out of stock';
         }
     }
@@ -149,7 +149,7 @@ class Orders extends Token {
         @param string $productId
         @return bool
     */
-    private function checkAvailableProduct(?int $quantity = 0, ?string $productId = null) : bool {
+    private function checkAvailableProduct(?int $quantity = 0, ?string $productId = null, ?string $customerId = null) : bool {
         $sql = "SELECT quantity FROM products WHERE id = ?";
         $stmt = $this->conn->prepare($sql);
 
@@ -162,7 +162,7 @@ class Orders extends Token {
         $result = $stmt->get_result();
 
         $availableQuantity = $result->fetch_assoc()['quantity'] ?? 0; 
-        $getTotalPurchases = $this->getTotalPurchases($productId);
+        $getTotalPurchases = $this->getTotalPurchases($productId, $customerId);
         
         if($getTotalPurchases === false) {
             return false;
@@ -176,15 +176,15 @@ class Orders extends Token {
         @param string $productId
         @return int
     */
-    private function getTotalPurchases(?string $productId = null) : int | bool {
-        $sql = "SELECT SUM(quantity) AS total_purchased FROM orders WHERE product_id = ?";
+    private function getTotalPurchases(?string $productId = null, ?string $customerId = null) : int | bool {
+        $sql = "SELECT SUM(quantity) AS total_purchased FROM orders WHERE product_id = ? AND customer_id != ?";
         $stmt = $this->conn->prepare($sql);
 
         if(!$stmt) {
             return false;
         }
 
-        $stmt->bind_param('s', $productId);
+        $stmt->bind_param('ss', $productId, $customerId);
         $stmt->execute();
         $result = $stmt->get_result();
 
