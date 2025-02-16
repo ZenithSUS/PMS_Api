@@ -6,6 +6,11 @@ class Users extends Token {
         parent::__construct();
     }
 
+    /**
+     * Get username by token 
+     * @param string $token 
+     * @return string
+    */     
     protected function getUser(string $token) : string {
         $sql = "SELECT username FROM users WHERE token = ? LIMIT 1";
         $stmt = $this->conn->prepare($sql);

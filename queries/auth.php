@@ -5,6 +5,12 @@ class Auth extends Token {
         parent::__construct();
     }
 
+    /**
+     * Login user
+     * @param string $account
+     * @param string $password
+     * @return string
+     */
     protected function loginUser(string $account, string $password) : string { 
         $sql = "SELECT * FROM users WHERE email = ? OR username = ? LIMIT 1";
         $stmt = $this->conn->prepare($sql);
@@ -38,6 +44,11 @@ class Auth extends Token {
         return $this->queryFailed();
     }
 
+    /**
+     * Check login auth
+     * @param string $account
+     * @return bool
+    */
     private function checkLoginAuth(string $account) : bool {
         $sql = "SELECT username, email FROM users WHERE email = ? OR username = ? LIMIT 1";
         $stmt = $this->conn->prepare($sql);
@@ -47,7 +58,14 @@ class Auth extends Token {
         return $result->num_rows > 0;
     }
 
-
+    /**
+     * Register user
+     * @param string $email
+     * @param string $username
+     * @param string $password
+     * @param string $confirmpassword
+     * @return string
+     */
     protected function registerUser(string $email, string $username, string $password, string $confirmpassword) : string {
         $this->checkFields($email, $username, $password, $confirmpassword);
 
@@ -58,6 +76,14 @@ class Auth extends Token {
         return $this->registerUserQuery($email, $username, $password);
     }
 
+    /**
+     * Check fields
+     * @param string $email
+     * @param string $username
+     * @param string $password
+     * @param string $confirmpassword
+     * @return void
+    */
     private function checkFields(string $email, string $username, string $password, string $confirmpassword) : void {
         if(empty($email) || is_null($email)) {
             $this->errors['email'] = "Please fill the email";
@@ -97,6 +123,13 @@ class Auth extends Token {
 
     }
 
+    /**
+     * Register user query
+     * @param string $email
+     * @param string $username
+     * @param string $password
+     * @return string 
+    */
     private function registerUserQuery(string $email, string $username, string $password) : string {
         $password = password_hash($password, PASSWORD_DEFAULT);
         $sql = "INSERT INTO users (id, email, username, password) VALUES (UUID(), ?, ?, ?)";
@@ -105,6 +138,11 @@ class Auth extends Token {
         return $stmt->execute() ? $this->success('register') : $this->queryFailed();
     }
     
+    /**
+     * Check username
+     * @param string $username
+     * @return array
+    */
     private function checkUsername(string $username) : array {
         $uppercase = preg_match('/[A-Z]/', $username);
         $specialchars = preg_match('/[^A-Za-z0-9]/', $username);
@@ -117,6 +155,11 @@ class Auth extends Token {
         ];
     }
 
+    /**
+     * Username exists
+     * @param string $username
+     * @return bool
+    */
     private function usernameExists(string $username) : bool {
         $sql = "SELECT username FROM users WHERE username = ? LIMIT 1";
         $stmt = $this->conn->prepare($sql);
@@ -125,6 +168,11 @@ class Auth extends Token {
         return $stmt->get_result()->num_rows > 0;
     }
 
+    /**
+     * Validate username
+     * @param array $username
+     * @return bool
+    */
     private function validateUsername(array $username) : bool {
         foreach(array_keys($username) as $hasType) {
             $status = $hasType ? true : false;
@@ -132,6 +180,11 @@ class Auth extends Token {
         return $status;
     }
 
+    /**
+     * Check email
+     * @param string $email
+     * @return bool
+    */
     private function checkEmail(string $email) : bool {
         $valid_names = [
             "gmail.com",
@@ -146,6 +199,11 @@ class Auth extends Token {
         return true;
     }
 
+    /**
+     * Email exists
+     * @param string $email
+     * @return bool
+    */
     private function emailExists(string $email) : bool {
         $sql = "SELECT email FROM users WHERE email = ? LIMIT 1";
         $stmt = $this->conn->prepare($sql);
@@ -154,6 +212,11 @@ class Auth extends Token {
         return $stmt->get_result()->num_rows > 0;
     }
 
+    /**
+     * Check password
+     * @param string $password
+     * @return array
+    */
     private function checkPassword(string $password) : array {
         $uppercase = preg_match('/[A-Z]/', $password);
         $lowercase = preg_match('/[a-z]/', $password);
@@ -168,7 +231,11 @@ class Auth extends Token {
        ];
     }
 
-
+    /**
+     * Validate password
+     * @param array $password
+     * @return bool
+    */
     private function validatePassword(array $password) : bool {
   
         foreach (array_keys($password) as $hasType){

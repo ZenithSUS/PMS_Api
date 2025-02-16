@@ -5,10 +5,10 @@ class Orders extends Token {
         parent::__construct();
     }
 
-    /*
-        Get all orders
-        @return string
-    */
+    /**
+     * Get all orders
+     * @return string
+     */
     protected function getAllOrders() : string {
         $sql = "SELECT orders.id, customers.name AS customerName, products.name AS productName, orders.quantity
         FROM orders 
@@ -25,10 +25,10 @@ class Orders extends Token {
         return $result->num_rows > 0 ? $this->fetched($result) : $this->notFound();
     }
 
-    /*
-        Get order by id
-        @param string $id
-        @return string
+    /**
+      * Get order by id
+      * @param string $id
+      * @return string
     */
     protected function getOrder(?string $id = null) : string {
         $sql = "SELECT orders.id, customers.name AS customerName, products.name AS productName, orders.quantity
@@ -50,13 +50,13 @@ class Orders extends Token {
     }
 
 
-    /*
-        Add order
-        @param string $customerId
-        @param string $productId
-        @param int $quantity
-        @return string
-    */
+    /**
+     * Add order
+     * @param string $customerId
+     * @param string $productId
+     * @param int $quantity
+     * @return string
+     */
     protected function addOrderQuery(?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : string {
         $this->checkFields($customerId, $productId, $quantity);
 
@@ -75,14 +75,14 @@ class Orders extends Token {
         return $stmt->execute() ? $this->success('order') : $this->queryFailed();
     }
 
-    /*
-        Edit order
-        @param string $id
-        @param string $customerId
-        @param string $productId
-        @param int $quantity
-        @return string
-    */
+    /**
+     * Edit order
+     * @param string $id
+     * @param string $customerId
+     * @param string $productId
+     * @param int $quantity
+     * @return string
+     */
     protected function editOrderQuery(?string $id = null, ?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : string {
         $this->checkFields($customerId, $productId, $quantity);
 
@@ -101,11 +101,11 @@ class Orders extends Token {
         return $stmt->execute() ? $this->success('order') : $this->queryFailed();
     }
 
-    /*
-        Delete order
-        @param string $id
-        @return string
-    */
+    /**
+     * Delete order
+     * @param string $id
+     * @return string
+     */
     protected function deleteOrderQuery(?string $id = null) : string {
         $sql = "DELETE FROM orders WHERE id = ? LIMIT 1";
         $stmt = $this->conn->prepare($sql);
@@ -118,13 +118,13 @@ class Orders extends Token {
         return $stmt->execute() ? $this->success('order') : $this->queryFailed();
     }
 
-    /*
-        Check fields
-        @param string $customerId
-        @param string $productId
-        @param int $quantity
-        @return void
-    */
+    /**
+     * Check fields
+     * @param string $customerId
+     * @param string $productId
+     * @param int $quantity
+     * @return void
+     */
     private function checkFields(?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : void {
         if(empty($customerId) || is_null($customerId) || $customerId === "") {
             $this->errors['customerName'] = 'Please select a customer';
@@ -143,12 +143,13 @@ class Orders extends Token {
         }
     }
 
-    /*
-        Check available product
-        @param int $quantity
-        @param string $productId
-        @return bool
-    */
+    /**
+     * Check available product
+     * @param int $quantity
+     * @param string $productId
+     * @param string $customerId
+     * @return bool
+     */
     private function checkAvailableProduct(?int $quantity = 0, ?string $productId = null, ?string $customerId = null) : bool {
         $sql = "SELECT quantity FROM products WHERE id = ?";
         $stmt = $this->conn->prepare($sql);
@@ -167,15 +168,16 @@ class Orders extends Token {
         if($getTotalPurchases === false) {
             return false;
         }
-
+        
         return $availableQuantity >= ($quantity + $getTotalPurchases);
     }
 
-    /*
-        Get total purchases
-        @param string $productId
-        @return int
-    */
+    /**
+     * Get total purchases
+     * @param string $productId
+     * @param string $customerId
+     * @return int | bool
+     */
     private function getTotalPurchases(?string $productId = null, ?string $customerId = null) : int | bool {
         $sql = "SELECT SUM(quantity) AS total_purchased FROM orders WHERE product_id = ? AND customer_id != ?";
         $stmt = $this->conn->prepare($sql);
