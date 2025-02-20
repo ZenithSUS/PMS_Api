@@ -83,8 +83,8 @@ class Orders extends Token {
      * @param int $quantity
      * @return string
      */
-    protected function editOrderQuery(?string $id = null, ?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : string {
-        $this->checkFields($customerId, $productId, $quantity);
+    protected function editOrderQuery(?string $id = null, ?string $customerId = null, ?string $productId = null, ?int $quantity = 0, ?string $process = null) : string {
+        $this->checkFields($customerId, $productId, $quantity, $process);
 
         if(!empty($this->errors)) {
             return $this->fieldError($this->errors);
@@ -119,13 +119,37 @@ class Orders extends Token {
     }
 
     /**
+     * Get user purchases
+     * @param string $id
+     * @return string
+    */
+    protected function getUserPurchases(?string $id = null) : string {
+        $sql = "SELECT orders.id, customers.name AS customerName, products.name AS productName, orders.quantity
+        FROM orders 
+        INNER JOIN customers ON orders.customer_id = customers.id
+        INNER JOIN products ON orders.product_id = products.id
+        WHERE orders.customer_id = ?
+        ORDER BY customers.name DESC";
+        $stmt = $this->conn->prepare($sql);
+    
+        if(!$stmt) {
+            return $this->queryFailed();
+        }
+    
+        $stmt->bind_param('s', $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->num_rows > 0 ? $this->fetched($result, "get") : $this->notFound();
+    }
+
+    /**
      * Check fields
      * @param string $customerId
      * @param string $productId
      * @param int $quantity
      * @return void
      */
-    private function checkFields(?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : void {
+    private function checkFields(?string $customerId = null, ?string $productId = null, ?int $quantity = 0, ?string $process = null) : void {
         if(empty($customerId) || is_null($customerId) || $customerId === "") {
             $this->errors['customerName'] = 'Please select a customer';
         }
@@ -138,7 +162,7 @@ class Orders extends Token {
             $this->errors['quantity'] = 'Please add a value';
         } else if ($quantity < 0) {
             $this->errors['quantity'] = 'Please enter a valid value';
-        } else if ($productId !== "" && !$this->checkAvailableProduct($quantity, $productId, $customerId)) {
+        } else if ($productId !== "" && !$this->checkAvailableProduct($quantity, $productId, $customerId, $process)) {
             $this->errors['quantity'] = 'Product is out of stock';
         }
     }
@@ -150,7 +174,7 @@ class Orders extends Token {
      * @param string $customerId
      * @return bool
      */
-    private function checkAvailableProduct(?int $quantity = 0, ?string $productId = null, ?string $customerId = null) : bool {
+    private function checkAvailableProduct(?int $quantity = 0, ?string $productId = null, ?string $customerId = null, ?string $process = null) : bool {
         $sql = "SELECT quantity FROM products WHERE id = ?";
         $stmt = $this->conn->prepare($sql);
 
@@ -162,31 +186,59 @@ class Orders extends Token {
         $stmt->execute();
         $result = $stmt->get_result();
 
-        $availableQuantity = $result->fetch_assoc()['quantity'] ?? 0; 
-        $getTotalPurchases = $this->getTotalPurchases($productId, $customerId);
-        
+        $availableQuantity = $result->fetch_assoc()['quantity'] ?? 0;
+        $getSpecificUserOrder = $this->getUserSpecificOrderPurchases($customerId, $productId); 
+        $getTotalPurchases = $this->getTotalPurchases($productId);
+
         if($getTotalPurchases === false) {
             return false;
         }
-        
-        return $availableQuantity >= ($quantity + $getTotalPurchases);
+
+        if($process === "edit_order") {
+            return $quantity - $getSpecificUserOrder <= $availableQuantity - $getTotalPurchases;
+        }
+        return $availableQuantity - ($getTotalPurchases + $getSpecificUserOrder) >= $quantity;
     }
 
     /**
      * Get total purchases
      * @param string $productId
-     * @param string $customerId
      * @return int | bool
      */
-    private function getTotalPurchases(?string $productId = null, ?string $customerId = null) : int | bool {
-        $sql = "SELECT SUM(quantity) AS total_purchased FROM orders WHERE product_id = ? AND customer_id != ?";
+    private function getTotalPurchases(?string $productId = null) : int | bool {
+        $sql = "SELECT SUM(quantity) AS total_purchased FROM orders WHERE product_id = ?";
         $stmt = $this->conn->prepare($sql);
 
         if(!$stmt) {
             return false;
         }
 
-        $stmt->bind_param('ss', $productId, $customerId);
+        $stmt->bind_param('s', $productId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if($result->num_rows === 0) {
+            return 0;
+        }
+        $totalPurchased = $result->fetch_assoc()['total_purchased'] ?? 0;
+        return intval($totalPurchased);       
+    }
+
+    /**
+     * Get total user specific order purchases
+     * @param string $id
+     * @param string $productId
+     * @return int
+     */
+    private function getUserSpecificOrderPurchases(?string $id = null, ?string $productId = null) : int {
+        $sql = "SELECT SUM(quantity) AS total_purchased FROM orders WHERE customer_id = ? AND product_id = ?";
+        $stmt = $this->conn->prepare($sql);
+
+        if(!$stmt) {
+            return 0;
+        }
+
+        $stmt->bind_param('ss', $id, $productId);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -194,7 +246,8 @@ class Orders extends Token {
             return 0;
         }
 
-        return intval($result->fetch_assoc()['total_purchased']);       
+        $totalPurchased = $result->fetch_assoc()['total_purchased'] ?? 0;
+        return intval($totalPurchased);
     }
 }
 

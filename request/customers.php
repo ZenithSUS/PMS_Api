@@ -38,8 +38,8 @@ class CustomersRequest extends Customers {
         parent::__construct();
     }
 
-    public function getAll() {
-        return $this->getAllCustomers();
+    public function getAll(?string $page = null) {
+        return $this->getAllCustomers($page);
     }
 
     public function get(?string $id = null) {
@@ -112,9 +112,12 @@ if($requestMethod == 'POST') {
 
 if($requestMethod == 'GET') {
     $id = $_GET['id'] ?? null;
+    $page = $_GET['page'] ?? null;
 
     if(isset($id)) {
         echo $customers->get($id);
+    } else if(isset($page)) {
+        echo $customers->getAll($page);
     } else {
         echo $customers->getAll();
     }

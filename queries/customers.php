@@ -10,16 +10,46 @@ class Customers extends Token {
      * Get all customers
      * @return string
     */
-    protected function getAllCustomers() : string {
-        $sql = "SELECT id, name, email FROM customers ORDER BY id DESC";
-        $stmt = $this->conn->prepare($sql);
+    protected function getAllCustomers(?string $page = null) : string {
+        $page = intval($page);
+        if(!empty($page)) {
+            $offset = ($page - 1) * 5;
+            $totalPages = ceil($this->countCustomers() / 5);
+            $sql = "SELECT id, name, email FROM customers ORDER BY id DESC LIMIT 5 OFFSET ?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param('i', $offset); 
+        } else {
+            $sql = "SELECT id, name, email FROM customers ORDER BY id DESC";
+            $stmt = $this->conn->prepare($sql);
+        }
+        
+        if(!$stmt) return $this->queryFailed();
 
         if(!$stmt->execute()) {
             return $this->queryFailed();
         }
 
         $result = $stmt->get_result();
-        return $result->num_rows > 0 ? $this->fetched($result) : $this->notFound();
+        
+        if(!empty($page) && $result->num_rows > 0) {
+            return $this->fetched($result, null, $totalPages);
+        } else if($result->num_rows > 0) {
+            return $this->fetched($result);
+        }
+
+        return $this->notFound();
+    }
+
+    /**
+     * Count customers
+     * @return int
+    */
+    protected function countCustomers() : int {
+        $sql = "SELECT COUNT(id) AS total FROM customers";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc()['total'];
     }
     
     /**
@@ -114,13 +144,36 @@ class Customers extends Token {
             $this->errors['name'] = 'Name is required';
         } else if (!preg_match("/^[a-zA-Z ]*$/", $name)) {
             $this->errors['name'] = 'Please enter a valid name';
+        } else if ($this->checkNameExists($name) == true) {
+            $this->errors['name'] = 'Name already exists';
         }
 
         if(empty($email) || is_null($email) || $email === "") {
             $this->errors['email'] = 'Email is required';
         } else if ($this->checkEmail($email) == false) {
             $this->errors['email'] = 'Please enter a valid email';
+        } else if ($this->checkEmailExists($email) == true) {
+            $this->errors['email'] = 'Email already exists';
         }
+    }
+
+    /**
+     * Check Name exists
+     * @param string $name
+     * @return bool
+     */
+    private function checkNameExists(string $name) : bool {
+        $sql = "SELECT name FROM customers WHERE name = ?";
+        $stmt = $this->conn->prepare($sql);
+
+        if(!$stmt) {
+            return false;
+        }
+
+        $stmt->bind_param('s', $name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->num_rows > 0;
     }
 
     /**
@@ -140,6 +193,24 @@ class Customers extends Token {
         if(!in_array(end($emailName), $valid_names)) return false;
         if(!preg_match("/^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z.]{2,5}$/", $email)) return false;
         return true;
+    }
+
+    /**
+     * Check email exists
+     * @param string $email
+     * @return bool
+     */
+    private function checkEmailExists(string $email) : bool {
+        $sql = "SELECT email FROM customers WHERE email = ?";
+        $stmt = $this->conn->prepare($sql);
+
+        if(!$stmt) {
+            return false;
+        }
+
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        return $stmt->get_result()->num_rows > 0 ? true : false;
     }
 }
 

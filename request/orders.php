@@ -57,8 +57,8 @@ class OrdersRequest extends Orders {
         return $this->addOrderQuery($customerId, $productId, $quantity);
     }
 
-    public function editOrder(?string $id = null, ?string $customerId = null, ?string $productId = null, ?int $quantity = 0) : string {
-        return $this->editOrderQuery($id, $customerId, $productId, $quantity);
+    public function editOrder(?string $id = null, ?string $customerId = null, ?string $productId = null, ?int $quantity = 0, ?string $process = null) : string {
+        return $this->editOrderQuery($id, $customerId, $productId, $quantity, $process);
     }
 
     public function deleteOrder(?string $id = null) : string {
@@ -87,7 +87,7 @@ if($requestMethod == 'POST') {
 
     if($process && $process == 'edit_order') {
         $id = $_GET['id'] ?? null;
-        echo $orders->editOrder($id, $customerId, $productId, $quantity);
+        echo $orders->editOrder($id, $customerId, $productId, $quantity, $process);
     }
 
     if(!$process) {

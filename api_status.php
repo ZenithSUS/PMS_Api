@@ -36,9 +36,19 @@ class API extends Database {
         return json_encode($response);
     }
 
-    protected function fetched($result, ?string $type = null) : string {
+    protected function fetched($result, ?string $type = null, ?int $totalPages = null) : string {
         !$type ? $result = $result->fetch_all(MYSQLI_ASSOC) : $result = $result->fetch_assoc();
         
+        if(!empty($totalPages)) {
+            $response = array (
+                'status' => 200,
+                'message' => 'Query successful',
+                'data' => $result,
+                'totalPages' => $totalPages
+            );
+            header("HTTP/1.1 200 OK");
+            return json_encode($response);
+        }
         $response = array (
             'status' => 200,
             'message' => 'Query successful',
